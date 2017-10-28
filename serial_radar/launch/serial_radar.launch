@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node pkg="serial_radar" name="serial_radar" type="serial_radar" output="screen">
+	    <param name="serialPort" type="string" value="/dev/ttyUSB0" />
+    </node>
+    
+</launch>
