@@ -106,12 +106,12 @@ int main(int argc, char *argv[])
 				{
 //					printf("Message ID : 0x%x\n", MESSAGE_ID);
 
-					if(MESSAGE_ID == MSGID_SS)
-					{
+//					if(MESSAGE_ID == MSGID_SS)
+//					{
+//
+//					}
 
-					}
-
-					else if(MESSAGE_ID == MSGID_TS)
+					if(MESSAGE_ID == MSGID_TS)
 					{
 						
 						ros::Time listeningtime = ros::Time::now();
@@ -130,16 +130,16 @@ int main(int argc, char *argv[])
 							target_info[k] = buffer[k+4];
 
 						printf("Target %x info:", TI_Index);
-						float Rcs = TI_Rcs*0.5 - 50;
-						float Range = (TI_RangeH*256 + TI_RangeL)*0.01;
-						float Azimuth = TI_Azimuth*2 - 90;
-						float Vrel = (TI_VreIH*256 + TI_VreIL)*0.05 - 35;
-						float SNR = TI_SNR - 127;
-						printf("            Reflected area:      %x\n", Rcs);
-						printf("                          Distance:            %d\n", Range);
-						printf("                          Angle:               %d\n", Azimuth);
-						printf("                          Relative speed:      %d\n", Vrel);
-						printf("                          Signal noise ratio:  %d\n\n", SNR);
+						double Rcs = TI_Rcs*0.5 - 50;
+						double Range = (TI_RangeH*256 + TI_RangeL)*0.01;
+						double Azimuth = TI_Azimuth*2 - 90;
+						double Vrel = (TI_VreIH*256 + TI_VreIL)*0.05 - 35;
+						double SNR = TI_SNR - 127;
+//						printf("            Reflected area:      %3.2f\n", Rcs);
+						printf("\n                          Distance:            %3.2f\n", Range);
+						printf("                          Angle:               %3.2f\n", Azimuth);
+						printf("                          Relative speed:      %3.2f\n", Vrel);
+//						printf("                          Signal noise ratio:  %3.2f\n\n", SNR);
 
 					}
 
