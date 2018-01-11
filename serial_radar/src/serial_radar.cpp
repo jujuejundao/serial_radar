@@ -29,7 +29,6 @@ uint8_t buffer[14];
 #define ENDER         *(uint16_t *)(buffer + 12)
 
 //define sensor_status
-
 //define target status
 //#define NO_NoOfTarget *(uint8_t *)(target_status)
 //#define NO_RollCount  *(uint8_t *)(target_status + 1)
@@ -153,5 +152,4 @@ int main(int argc, char *argv[])
 	}
 
 }
-
 
