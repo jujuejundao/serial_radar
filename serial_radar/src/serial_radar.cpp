@@ -4,7 +4,7 @@
 #include <math.h>
 #include <geometry_msgs/TwistStamped.h>
 
-//define 5 different messages and the buffer message
+//define 5 different messages and the buffer
 uint8_t sensor_configuration[8];
 uint8_t sensor_back[8];
 uint8_t sensor_status[8];
@@ -121,13 +121,18 @@ int main(int argc, char *argv[])
 	float Range_extra;
 	float Azimuth_extra;
 	float Vrel_extra;
-	float SNR_extra;	
+	float SNR_extra;
+	uint8_t No_of_targets;
+	float range_list[10];
+    uint8_t range_key[10];	
 
 
 	while(ros::ok())
 	{
 		uint32_t bytes_in_buff = fd.available();
 		uint32_t read_bytes = 0;
+
+
 
 		if (bytes_in_buff > 0)
 		{
@@ -161,7 +166,9 @@ int main(int argc, char *argv[])
 						printf("Target status:");
 						printf("            No of targets:   %x\n", buffer[4]);
 						printf("                          Rollcount:     %x\n\n", buffer[5]);
-						if(buffer[4] == 0)
+
+						No_of_targets = buffer[4];
+						if(No_of_targets == 0)
 						{
 							Rcs_min = 0;
 							Range_min = 100;
@@ -169,7 +176,7 @@ int main(int argc, char *argv[])
 							Azimuth_min = 0;
 							SNR_min = 0;
 
-						}	
+						}
 							
 					}
 						
@@ -193,11 +200,28 @@ int main(int argc, char *argv[])
 							printf("                          Angle_1:               %3.2f\n", Azimuth_1);
 							printf("                          Relative speed_1:      %3.2f\n", Vrel_1);
 							printf("                          Signal noise ratio_1:  %3.2f\n\n", SNR_1);
-							Rcs_min = Rcs_1;
-							Range_min = Range_1;
-							Azimuth_min = Azimuth_1;
-							Vrel_min = Vrel_1;
-							SNR_min = SNR_1;
+							
+							range_list[TI_Index-1]= Range_1;
+							range_key[TI_Index-1] = TI_Index;
+							if(No_of_targets == TI_Index)
+							{
+								Rcs_min = Rcs_1;
+								Range_min = Range_1;
+								Azimuth_min = Azimuth_1;
+								Vrel_min = Vrel_1;
+								SNR_min = SNR_1;
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);
+							}
 						}
 						else if(TI_Index == 2)
 						{
@@ -212,13 +236,38 @@ int main(int argc, char *argv[])
 							printf("                          Angle_2:               %3.2f\n", Azimuth_2);
 							printf("                          Relative speed_2:      %3.2f\n", Vrel_2);
 							printf("                          Signal noise ratio_2:  %3.2f\n\n", SNR_2);
-							if(Range_min > Range_2)
+							
+							range_list[TI_Index-1]= Range_2;
+							range_key[TI_Index-1] = TI_Index;
+							if(No_of_targets == TI_Index)
 							{
-								Rcs_min = Rcs_2;
-								Range_min = Range_2;
-								Azimuth_min = Azimuth_2;
-								Vrel_min = Vrel_2;
-								SNR_min = SNR_2;
+								if(Range_1 < Range_2)
+								{
+									Rcs_min = Rcs_1;
+									Range_min = Range_1;
+									Azimuth_min = Azimuth_1;
+									Vrel_min = Vrel_1;
+									SNR_min = SNR_1;
+								}
+								else
+								{
+									Rcs_min = Rcs_2;
+									Range_min = Range_2;
+									Azimuth_min = Azimuth_2;
+									Vrel_min = Vrel_2;
+									SNR_min = SNR_2;
+								}
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);
 							}
 						}
 						else if(TI_Index == 3)
@@ -234,14 +283,79 @@ int main(int argc, char *argv[])
 							printf("                          Angle_3:               %3.2f\n", Azimuth_3);
 							printf("                          Relative speed_3:      %3.2f\n", Vrel_3);
 							printf("                          Signal noise ratio_3:  %3.2f\n\n", SNR_3);
-							if(Range_min > Range_3)
+							
+							range_list[TI_Index-1]= Range_3;
+							range_key[TI_Index-1] = TI_Index;
+							if(No_of_targets == TI_Index)
 							{
-								Rcs_min = Rcs_3;
-								Range_min = Range_3;
-								Azimuth_min = Azimuth_3;
-								Vrel_min = Vrel_3;
-								SNR_min = SNR_3;
+								for(int i = 0; i<No_of_targets-1;i++)
+								{
+									for(int j = 0; j<No_of_targets-i-1; j++)
+									{
+										if(range_list[j] > range_list[j+1])
+										{
+											float temp_range = range_list[j];
+											range_list[j] = range_list[j+1];
+											range_list[j+1] = temp_range;
+											float temp_key = range_key[j];
+											range_key[j] = range_key[j+1];
+											range_key[j+1] = temp_key;
+										}
+									}
+								}
+
+								switch(range_key[0])
+								{
+									case 1: Rcs_min = Rcs_1;
+											Range_min = Range_1;
+											Azimuth_min = Azimuth_1;
+											Vrel_min = Vrel_1;
+											SNR_min = SNR_1;
+											break;
+
+									case 2: Rcs_min = Rcs_2;
+											Range_min = Range_2;
+											Azimuth_min = Azimuth_2;
+											Vrel_min = Vrel_2;
+											SNR_min = SNR_2;
+											break;
+
+									case 3: Rcs_min = Rcs_3;
+											Range_min = Range_3;
+											Azimuth_min = Azimuth_3;
+											Vrel_min = Vrel_3;
+											SNR_min = SNR_3;
+											break;
+
+									case 4: Rcs_min = Rcs_4;
+											Range_min = Range_4;
+											Azimuth_min = Azimuth_4;
+											Vrel_min = Vrel_4;
+											SNR_min = SNR_4;
+											break;
+
+									case 5: Rcs_min = Rcs_5;
+											Range_min = Range_5;
+											Azimuth_min = Azimuth_5;
+											Vrel_min = Vrel_5;
+											SNR_min = SNR_5;
+											break;
+
+								}
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);
+
 							}
+							
 						}
 						else if(TI_Index == 4)
 						{
@@ -256,14 +370,77 @@ int main(int argc, char *argv[])
 							printf("                          Angle_4:               %3.2f\n", Azimuth_4);
 							printf("                          Relative speed_4:      %3.2f\n", Vrel_4);
 							printf("                          Signal noise ratio_4:  %3.2f\n\n", SNR_4);
-							if(TI_Index == 4 && Range_min > Range_4)
+							
+							range_list[TI_Index-1]= Range_4;
+							range_key[TI_Index-1] = TI_Index;
+							if(No_of_targets == TI_Index)
 							{
-								Rcs_min = Rcs_4;
-								Range_min = Range_4;
-								Azimuth_min = Azimuth_4;
-								Vrel_min = Vrel_4;
-								SNR_min = SNR_4;
+								for(int i = 0; i<No_of_targets-1;i++)
+								{
+									for(int j = 0; j<No_of_targets-i-1; j++)
+									{
+										if(range_list[j] > range_list[j+1])											{
+											float temp_range = range_list[j];
+											range_list[j] = range_list[j+1];
+											range_list[j+1] = temp_range;
+											float temp_key = range_key[j];
+											range_key[j] = range_key[j+1];
+											range_key[j+1] = temp_key;
+										}
+									}
+								}
+								switch(range_key[0])
+								{
+									case 1: Rcs_min = Rcs_1;
+											Range_min = Range_1;
+											Azimuth_min = Azimuth_1;
+											Vrel_min = Vrel_1;
+											SNR_min = SNR_1;
+											break;
+
+									case 2: Rcs_min = Rcs_2;
+											Range_min = Range_2;
+											Azimuth_min = Azimuth_2;
+											Vrel_min = Vrel_2;
+											SNR_min = SNR_2;
+											break;
+
+									case 3: Rcs_min = Rcs_3;
+											Range_min = Range_3;
+											Azimuth_min = Azimuth_3;
+											Vrel_min = Vrel_3;
+											SNR_min = SNR_3;
+											break;
+
+									case 4: Rcs_min = Rcs_4;
+											Range_min = Range_4;
+											Azimuth_min = Azimuth_4;
+											Vrel_min = Vrel_4;
+											SNR_min = SNR_4;
+											break;
+
+									case 5: Rcs_min = Rcs_5;
+											Range_min = Range_5;
+											Azimuth_min = Azimuth_5;
+											Vrel_min = Vrel_5;
+											SNR_min = SNR_5;
+											break;
+
+								}
+
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);	
 							}
+							
 						}
 						else if(TI_Index == 5)
 						{
@@ -278,14 +455,77 @@ int main(int argc, char *argv[])
 							printf("                          Angle_5:               %3.2f\n", Azimuth_5);
 							printf("                          Relative speed_5:      %3.2f\n", Vrel_5);
 							printf("                          Signal noise ratio:  %3.2f\n\n", SNR_5);
-							if(Range_min > Range_5)
+
+							range_list[TI_Index-1]= Range_5;
+							range_key[TI_Index-1] = TI_Index;
+							if(TI_Index == 5)
 							{
-								Rcs_min = Rcs_5;
-								Range_min = Range_5;
-								Azimuth_min = Azimuth_5;
-								Vrel_min = Vrel_5;
-								SNR_min = SNR_5;
+								for(int i = 0; i<No_of_targets-1;i++)
+								{
+									for(int j = 0; j<No_of_targets-i-1; j++)
+									{
+										if(range_list[j] > range_list[j+1])											{
+											float temp_range = range_list[j];
+											range_list[j] = range_list[j+1];
+											range_list[j+1] = temp_range;
+											float temp_key = range_key[j];
+											range_key[j] = range_key[j+1];
+											range_key[j+1] = temp_key;
+										}
+									}
+								}
+								switch(range_key[0])
+								{
+									case 1: Rcs_min = Rcs_1;
+											Range_min = Range_1;
+											Azimuth_min = Azimuth_1;
+											Vrel_min = Vrel_1;
+											SNR_min = SNR_1;
+											break;
+
+									case 2: Rcs_min = Rcs_2;
+											Range_min = Range_2;
+											Azimuth_min = Azimuth_2;
+											Vrel_min = Vrel_2;
+											SNR_min = SNR_2;
+											break;
+
+									case 3: Rcs_min = Rcs_3;
+											Range_min = Range_3;
+											Azimuth_min = Azimuth_3;
+											Vrel_min = Vrel_3;
+											SNR_min = SNR_3;
+											break;
+
+									case 4: Rcs_min = Rcs_4;
+											Range_min = Range_4;
+											Azimuth_min = Azimuth_4;
+											Vrel_min = Vrel_4;
+											SNR_min = SNR_4;
+											break;
+
+									case 5: Rcs_min = Rcs_5;
+											Range_min = Range_5;
+											Azimuth_min = Azimuth_5;
+											Vrel_min = Vrel_5;
+											SNR_min = SNR_5;
+											break;
+
+								}
+
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);	
 							}
+							
 						}
 						else
 						{
@@ -307,20 +547,21 @@ int main(int argc, char *argv[])
 								Azimuth_min = Azimuth_extra;
 								Vrel_min = Vrel_extra;
 								SNR_min = SNR_extra;
+								printf("Target_min info: ");
+								printf("         Reflected area_min:      %3.2f\n", Rcs_min);
+								printf("                          Distance_min:            %3.2f\n", Range_min);
+								printf("                          Angle_min:               %3.2f\n", Azimuth_min);
+								printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
+								printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
+								velDMsg.header.stamp = ros::Time::now();
+							    velDMsg.twist.linear.x = Range_min;
+							    velDMsg.twist.linear.y = Azimuth_min;
+							    velDMsg.twist.linear.z = 0.0;
+							    velDPub.publish(velDMsg);
 							}
 						}
 
-						printf("Target_min info: ");
-						printf("         Reflected area_min:      %3.2f\n", Rcs_min);
-						printf("                          Distance_min:            %3.2f\n", Range_min);
-						printf("                          Angle_min:               %3.2f\n", Azimuth_min);
-						printf("                          Relative speed_min:      %3.2f\n", Vrel_min);
-						printf("                          Signal noise ratio:  %3.2f\n\n", SNR_min);
-						velDMsg.header.stamp = ros::Time::now();
-					    velDMsg.twist.linear.x = Range_min;
-					    velDMsg.twist.linear.y = Azimuth_min;
-					    velDMsg.twist.linear.z = 0.0;
-					    velDPub.publish(velDMsg);
+						
 					}					
 				}
 			}
